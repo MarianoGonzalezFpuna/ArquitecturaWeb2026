@@ -1,42 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UserPanel – Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <h2>User List</h2>
-        <a href="/add" class="btn btn-danger btn-sm">Add User</a>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>City</th>
-                        <th>Contact</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.name }}</td>
-                        <td>{{ user.city }}</td>
-                        <td>{{ user.contact }}</td>
-                        <td>
-                            <a href="{{url_for('edit_user',id=user.id)}}" class="btn btn-warning btn-sm">Edit</a>
-                            <a href="{{url_for('delete_user',id=user.id)}}" class="btn btn-danger btn-sm">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span>👤</span> UserPanel
     </div>
+    <span class="sidebar-section">Menú</span>
+    <a href="/" class="nav-item active">
+      <i class="nav-icon fa fa-table-columns"></i> Dashboard
+    </a>
+    <a href="/add" class="nav-item">
+      <i class="nav-icon fa fa-user-plus"></i> Nuevo Usuario
+    </a>
+    <span class="sidebar-section">API</span>
+    <a href="/api/usuarios" class="nav-item" target="_blank">
+      <i class="nav-icon fa fa-code"></i> GET /usuarios
+    </a>
+    <a href="/api/reportes/por-ciudad" class="nav-item" target="_blank">
+      <i class="nav-icon fa fa-chart-bar"></i> Reporte Ciudad
+    </a>
+    <a href="/api/reportes/estado" class="nav-item" target="_blank">
+      <i class="nav-icon fa fa-circle-half-stroke"></i> Reporte Estado
+    </a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <h1 class="page-title">Usuarios <span>·</span></h1>
+      <form class="search-wrap" method="GET" action="/">
+        <i class="search-icon fa fa-search"></i>
+        <input
+          class="search-input"
+          type="text"
+          name="q"
+          placeholder="Buscar por nombre, ciudad o email…"
+          value="{{ q }}"
+        >
+      </form>
+      <a href="/add" class="btn btn-primary">
+        <i class="fa fa-plus"></i> Nuevo Usuario
+      </a>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-label">Total Usuarios</div>
+        <div class="stat-value">{{ users | length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-label">Activos</div>
+        <div class="stat-value">{{ users | selectattr('status', 'equalto', 'Activo') | list | length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⛔</div>
+        <div class="stat-label">Inactivos</div>
+        <div class="stat-value">{{ users | selectattr('status', 'equalto', 'Inactivo') | list | length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏙️</div>
+        <div class="stat-label">Ciudades</div>
+        <div class="stat-value">{{ users | map(attribute='city') | list | unique | list | length }}</div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <span class="table-title">Lista de Usuarios</span>
+        {% if q %}
+          <span style="font-size:0.8rem; color:var(--muted)">
+            Resultados para "<strong style="color:var(--text)">{{ q }}</strong>"
+            &nbsp;<a href="/" style="color:var(--accent); text-decoration:none">✕ limpiar</a>
+          </span>
+        {% endif %}
+      </div>
+
+      {% if users %}
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Usuario</th>
+            <th>Ciudad</th>
+            <th>Contacto</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td style="color:var(--muted); font-size:0.8rem">{{ user.id }}</td>
+            <td>
+              <div class="user-cell">
+                <div class="avatar">{{ user.name[0].upper() }}</div>
+                <div>
+                  <div class="user-name">{{ user.name }}</div>
+                  <div class="user-email">{{ user.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td>{{ user.city }}</td>
+            <td>{{ user.contact }}</td>
+            <td>
+              {% if user.role == 'Admin' %}
+                <span class="badge badge-purple">👑 {{ user.role }}</span>
+              {% elif user.role == 'Moderador' %}
+                <span class="badge badge-warning">🛡 {{ user.role }}</span>
+              {% else %}
+                <span class="badge badge-info">👤 {{ user.role }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if user.status == 'Activo' %}
+                <span class="badge badge-success">● Activo</span>
+              {% else %}
+                <span class="badge badge-danger">● Inactivo</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="actions">
+                <a href="{{ url_for('edit_user', id=user.id) }}" class="btn btn-sm btn-ghost" title="Editar">
+                  <i class="fa fa-pen"></i>
+                </a>
+                <a href="{{ url_for('toggle_status', id=user.id) }}" class="btn btn-sm btn-success-ghost" title="Cambiar estado">
+                  <i class="fa fa-power-off"></i>
+                </a>
+                <a href="{{ url_for('delete_user', id=user.id) }}"
+                   class="btn btn-sm btn-danger-ghost"
+                   title="Eliminar"
+                   onclick="return confirm('¿Eliminar a {{ user.name }}?')">
+                  <i class="fa fa-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <p>No se encontraron usuarios{% if q %} para "{{ q }}"{% endif %}.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
 </body>
 </html>
