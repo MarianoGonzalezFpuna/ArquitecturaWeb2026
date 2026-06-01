@@ -1,30 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New User</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UserPanel – Nuevo Usuario</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <h2>Add New User</h2>
-        <form method="post">
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" name="name" class="form-control" required >
-            </div>
-            <div class="form-group">
-                <label for="city">City</label>
-                <input type="text" name="city" class="form-control" required >
-            </div>
-            <div class="form-group">
-                <label for="contact">Contact</label>
-                <input type="text" name="contact" class="form-control" required >
-            </div>
-            <button type="submit" class="btn btn-success">Add User</button>
-            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
-        </form>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span>👤</span> UserPanel
     </div>
+    <span class="sidebar-section">Menú</span>
+    <a href="/" class="nav-item">
+      <i class="nav-icon fa fa-table-columns"></i> Dashboard
+    </a>
+    <a href="/add" class="nav-item active">
+      <i class="nav-icon fa fa-user-plus"></i> Nuevo Usuario
+    </a>
+    <span class="sidebar-section">API</span>
+    <a href="/api/usuarios" class="nav-item" target="_blank">
+      <i class="nav-icon fa fa-code"></i> GET /usuarios
+    </a>
+    <a href="/api/reportes/por-ciudad" class="nav-item" target="_blank">
+      <i class="nav-icon fa fa-chart-bar"></i> Reporte Ciudad
+    </a>
+    <a href="/api/reportes/estado" class="nav-item" target="_blank">
+      <i class="nav-icon fa fa-circle-half-stroke"></i> Reporte Estado
+    </a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="form-page">
+      <a href="/" class="back-link"><i class="fa fa-arrow-left"></i> Volver al dashboard</a>
+      <h1 class="page-title" style="margin-bottom:8px">Nuevo <span>Usuario</span></h1>
+      <p class="form-subtitle">Completá los datos para registrar un nuevo usuario en el sistema.</p>
+
+      <div class="form-card">
+        <form method="post">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="name">Nombre completo</label>
+              <input type="text" id="name" name="name" class="form-control" placeholder="Ej: Juan Pérez" required>
+            </div>
+            <div class="form-group">
+              <label for="city">Ciudad</label>
+              <input type="text" id="city" name="city" class="form-control" placeholder="Ej: Asunción" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" class="form-control" placeholder="correo@ejemplo.com" required>
+            </div>
+            <div class="form-group">
+              <label for="contact">Contacto / Teléfono</label>
+              <input type="text" id="contact" name="contact" class="form-control" placeholder="Ej: 0981 123 456" required>
+            </div>
+            <div class="form-group">
+              <label for="role">Rol</label>
+              <select id="role" name="role" class="form-select">
+                <option value="Usuario">👤 Usuario</option>
+                <option value="Moderador">🛡 Moderador</option>
+                <option value="Admin">👑 Admin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="status">Estado</label>
+              <select id="status" name="status" class="form-select">
+                <option value="Activo">✅ Activo</option>
+                <option value="Inactivo">⛔ Inactivo</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa fa-user-plus"></i> Registrar Usuario
+            </button>
+            <a href="/" class="btn btn-ghost">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
 </body>
 </html>
