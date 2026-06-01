@@ -143,12 +143,12 @@
                 <a href="{{ url_for('toggle_status', id=user.id) }}" class="btn btn-sm btn-success-ghost" title="Cambiar estado">
                   <i class="fa fa-power-off"></i>
                 </a>
-                <a href="{{ url_for('delete_user', id=user.id) }}"
-                   class="btn btn-sm btn-danger-ghost"
-                   title="Eliminar"
-                   onclick="return confirm('¿Eliminar a {{ user.name }}?')">
-                  <i class="fa fa-trash"></i>
-                </a>
+                   <button
+                    class="btn btn-sm btn-danger-ghost"
+                    title="Eliminar"
+                    onclick="openModal('{{ url_for('delete_user', id=user.id) }}', '{{ user.name }}')">
+                    <i class="fa fa-trash"></i>
+                   </button>
               </div>
             </td>
           </tr>
@@ -165,5 +165,42 @@
 
   </main>
 </div>
+  <!-- MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div style="font-size:2.4rem;margin-bottom:12px">🗑️</div>
+    <div style="font-size:1.1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px">¿Eliminar usuario?</div>
+    <div style="font-size:0.85rem;color:#64748b;margin-bottom:24px">Esta acción no se puede deshacer. Se eliminará a <strong id="modal-username" style="color:#f1f5f9"></strong>.</div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="closeModal()" style="padding:9px 20px;border-radius:8px;border:1px solid #1f2f42;background:transparent;color:#94a3b8;cursor:pointer">Cancelar</button>
+      <button id="modal-confirm-btn" style="padding:9px 20px;border-radius:8px;border:none;background:#ef4444;color:#fff;cursor:pointer;font-weight:600">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:8888;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:#111827;border:1px solid #1f2f42;border-radius:14px;padding:32px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);transform:scale(0.92);transition:transform 0.25s}
+.modal-overlay.open .modal-box{transform:scale(1)}
+</style>
+
+<script>
+let deleteUrl = '';
+function openModal(url, name) {
+  deleteUrl = url;
+  document.getElementById('modal-username').textContent = name;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('deleteModal').classList.remove('open');
+}
+document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+  window.location.href = deleteUrl;
+});
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
 </body>
 </html>
