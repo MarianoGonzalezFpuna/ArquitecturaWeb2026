@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UserPanel – Reportes</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .reportes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+    .reporte-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .reporte-card.full {
+      grid-column: 1 / -1;
+    }
+    .reporte-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 220px;
+    }
+    .estado-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .estado-item {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .estado-num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .estado-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .color-green { color: #4ade80; }
+    .color-red   { color: #f87171; }
+
+    @media (max-width: 768px) {
+      .reportes-grid { grid-template-columns: 1fr; }
+      .reporte-card.full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span>👤</span> UserPanel
+    </div>
+    <span class="sidebar-section">Menú</span>
+    <a href="/" class="nav-item">
+      <i class="nav-icon fa fa-table-columns"></i> Dashboard
+    </a>
+    <a href="/add" class="nav-item">
+      <i class="nav-icon fa fa-user-plus"></i> Nuevo Usuario
+    </a>
+    <a href="/reportes" class="nav-item active">
+      <i class="nav-icon fa fa-chart-pie"></i> Reportes
+    </a>
+    <span class="sidebar-section">API</span>
+    <a href="https://ms-consulta.onrender.com/api/usuarios" class="nav-item" target="_blank">
+      <i class="nav-icon fa fa-code"></i> GET /usuarios
+    </a>
+    <a href="https://ms-reportes-87pa.onrender.com/api/reportes/por-ciudad" class="nav-item" target="_blank">
+      <i class="nav-icon fa fa-chart-bar"></i> Reporte Ciudad
+    </a>
+    <a href="https://ms-reportes-87pa.onrender.com/api/reportes/estado" class="nav-item" target="_blank">
+      <i class="nav-icon fa fa-circle-half-stroke"></i> Reporte Estado
+    </a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <h1 class="page-title">Reportes <span>·</span></h1>
+    </div>
+
+    <div class="reportes-grid">
+
+      <!-- ESTADO -->
+      <div class="reporte-card">
+        <div class="reporte-title"><i class="fa fa-circle-half-stroke"></i> Estado de Usuarios</div>
+        <div class="estado-grid">
+          <div class="estado-item">
+            <div class="estado-num color-green">{{ data_estado.get('Activo', 0) }}</div>
+            <div class="estado-label">✅ Activos</div>
+          </div>
+          <div class="estado-item">
+            <div class="estado-num color-red">{{ data_estado.get('Inactivo', 0) }}</div>
+            <div class="estado-label">⛔ Inactivos</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="margin-top:20px; height:180px">
+          <canvas id="chartEstado"></canvas>
+        </div>
+      </div>
+
+      <!-- ROL -->
+      <div class="reporte-card">
+        <div class="reporte-title"><i class="fa fa-users"></i> Usuarios por Rol</div>
+        <div class="chart-wrap">
+          <canvas id="chartRol"></canvas>
+        </div>
+      </div>
+
+      <!-- CIUDAD -->
+      <div class="reporte-card full">
+        <div class="reporte-title"><i class="fa fa-city"></i> Usuarios por Ciudad</div>
+        <div class="chart-wrap" style="height:260px">
+          <canvas id="chartCiudad"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const ACCENT = '#6366f1';
+  const GREEN  = '#4ade80';
+  const RED    = '#f87171';
+  const YELLOW = '#fbbf24';
+  const BLUE   = '#38bdf8';
+  const TEXT   = '#94a3b8';
+
+  Chart.defaults.color = TEXT;
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+
+  // ── ESTADO ────────────────────────────────────────────────────────────────
+  const estadoData = {{ data_estado | tojson }};
+  new Chart(document.getElementById('chartEstado'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Activos', 'Inactivos'],
+      datasets: [{
+        data: [estadoData['Activo'] || 0, estadoData['Inactivo'] || 0],
+        backgroundColor: [GREEN, RED],
+        borderWidth: 0,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } }
+      }
+    }
+  });
+
+  // ── ROL ───────────────────────────────────────────────────────────────────
+  const rolData = {{ data_rol | tojson }};
+  const rolLabels = rolData.map(r => r.role || r[0]);
+  const rolValues = rolData.map(r => r.total || r[1]);
+  new Chart(document.getElementById('chartRol'), {
+    type: 'doughnut',
+    data: {
+      labels: rolLabels,
+      datasets: [{
+        data: rolValues,
+        backgroundColor: [ACCENT, YELLOW, BLUE],
+        borderWidth: 0,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } }
+      }
+    }
+  });
+
+  // ── CIUDAD ────────────────────────────────────────────────────────────────
+  const ciudadData = {{ data_ciudad | tojson }};
+  const ciudadLabels = ciudadData.map(c => c.city || c[0]);
+  const ciudadValues = ciudadData.map(c => c.total || c[1]);
+  new Chart(document.getElementById('chartCiudad'), {
+    type: 'bar',
+    data: {
+      labels: ciudadLabels,
+      datasets: [{
+        label: 'Usuarios',
+        data: ciudadValues,
+        backgroundColor: ACCENT,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1 },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+</script>
+</body>
+</html>
