@@ -1,10 +1,10 @@
 # 🌐 ArquitecturaWeb2026 – Microservicios con Docker
 
 **Facultad Politécnica – Universidad Nacional de Asunción**  
-**Materia:** Arquitectura WEB
+**Materia:** Arquitectura WEB  
 **Profesor:** Rodrigo Benítez  
-**Integrantes:** Mariano González - 5.027.858
-                 Tiara Caccuri  - 7.213.555
+**Integrantes:** Mariano González - 5.027.858  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tiara Caccuri  - 7.213.555
 
 ---
 
@@ -94,7 +94,8 @@ ArquitecturaWeb2026/
 │   ├── templates/
 │   │   ├── index.html
 │   │   ├── add_user.html
-│   │   └── edit_user.html
+│   │   ├── edit_user.html
+│   │   └── reportes.html
 │   └── static/
 │       └── style.css
 ├── ms-consulta/                # Microservicio de consulta
@@ -142,6 +143,44 @@ CREATE TABLE "user" (
 
 ---
 
+## 🚀 Cómo Replicar
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/MarianoGonzalezFpuna/ArquitecturaWeb2026.git
+cd ArquitecturaWeb2026
+```
+
+### 2. Crear la base de datos en Supabase
+1. Crear proyecto en [supabase.com](https://supabase.com)
+2. Ir a **SQL Editor** y ejecutar el script del modelo de datos de arriba
+3. Copiar la connection string desde **Connect → Direct → Transaction pooler → URI**
+
+### 3. Desplegar en Render
+Crear un **Web Service** por cada carpeta en [render.com](https://render.com):
+
+| Web Service | Root Directory | Runtime |
+|---|---|---|
+| app-principal | `flask-crud-sqlite-main` | Docker |
+| ms-consulta | `ms-consulta` | Docker |
+| ms-insercion | `ms-insercion` | Docker |
+| ms-reportes | `ms-reportes` | Docker |
+
+Agregar la variable de entorno en cada **microservicio** (no en la app principal):
+```
+DATABASE_URL = postgresql://postgres.xxx:[PASSWORD]@aws-1-us-east-1.pooler.supabase.com:6543/postgres
+```
+
+### 4. Actualizar URLs en la app principal
+En `flask-crud-sqlite-main/app.py` reemplazar con las URLs de tus servicios:
+```python
+MS_CONSULTA  = "https://ms-consulta.onrender.com"
+MS_INSERCION = "https://ms-insercion.onrender.com"
+MS_REPORTES  = "https://ms-reportes-87pa.onrender.com"
+```
+
+---
+
 ## ✅ Cumplimiento del Tema 1 – Microservicios
 
 | Requisito | Estado |
@@ -150,5 +189,3 @@ CREATE TABLE "user" (
 | Al menos 1 inserción como microservicio | ✅ `POST /api/usuarios` |
 | Servicios en contenedor Docker | ✅ Cada microservicio tiene su propio `Dockerfile` |
 | Mínimo 3 microservicios | ✅ ms-consulta, ms-insercion, ms-reportes |
-
----
