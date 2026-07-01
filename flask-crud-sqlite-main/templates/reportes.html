@@ -19,8 +19,6 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 24px;
-      position: relative;
-      min-height: 280px;
     }
     .reporte-card.full { grid-column: 1 / -1; }
     .reporte-title {
@@ -60,7 +58,7 @@
     .spinner-overlay {
       position: absolute;
       inset: 0;
-      background: var(--card);
+      background: rgba(17,24,39,0.85);
       border-radius: 14px;
       display: flex;
       flex-direction: column;
@@ -68,11 +66,6 @@
       justify-content: center;
       gap: 12px;
       z-index: 10;
-      transition: opacity 0.4s ease;
-    }
-    .spinner-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
     }
     .spinner {
       width: 36px;
@@ -82,20 +75,8 @@
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
-    .spinner-text {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
+    .spinner-text { font-size: 0.8rem; color: var(--muted); }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ERROR */
-    .error-msg {
-      text-align: center;
-      color: #f87171;
-      font-size: 0.85rem;
-      padding: 20px;
-      display: none;
-    }
 
     @media (max-width: 768px) {
       .reportes-grid { grid-template-columns: 1fr; }
@@ -139,55 +120,65 @@
       <h1 class="page-title">Reportes <span>·</span></h1>
     </div>
 
+    {% if not data_ciudad and not data_estado %}
+    <!-- AVISO SERVICIOS DORMIDOS -->
+    <div style="background:#1a2636;border:1px solid #2a3f55;border-left:4px solid #fbbf24;border-radius:10px;padding:14px 20px;margin-top:24px;font-size:0.88rem;color:#94a3b8">
+      ⚠️ Los microservicios están iniciando. <a href="/reportes" style="color:#6366f1">Recargá la página</a> en unos segundos.
+    </div>
+    {% endif %}
+
     <div class="reportes-grid">
 
       <!-- ESTADO -->
-      <div class="reporte-card">
-        <div class="spinner-overlay" id="spin-estado">
+      <div class="reporte-card" style="position:relative">
+        {% if not data_estado %}
+        <div class="spinner-overlay">
           <div class="spinner"></div>
-          <div class="spinner-text">Cargando estado...</div>
+          <div class="spinner-text">Iniciando servicio...</div>
         </div>
+        {% endif %}
         <div class="reporte-title"><i class="fa fa-circle-half-stroke"></i> Estado de Usuarios</div>
         <div class="estado-grid">
           <div class="estado-item">
-            <div class="estado-num color-green" id="num-activos">–</div>
+            <div class="estado-num color-green">{{ data_estado.get('activos', 0) }}</div>
             <div class="estado-label">✅ Activos</div>
           </div>
           <div class="estado-item">
-            <div class="estado-num color-red" id="num-inactivos">–</div>
+            <div class="estado-num color-red">{{ data_estado.get('inactivos', 0) }}</div>
             <div class="estado-label">⛔ Inactivos</div>
           </div>
         </div>
         <div class="chart-wrap" style="margin-top:20px; height:180px">
           <canvas id="chartEstado"></canvas>
         </div>
-        <div class="error-msg" id="err-estado">⚠️ No se pudo cargar el servicio</div>
       </div>
 
       <!-- ROL -->
-      <div class="reporte-card">
-        <div class="spinner-overlay" id="spin-rol">
+      <div class="reporte-card" style="position:relative">
+        {% if not data_rol %}
+        <div class="spinner-overlay">
           <div class="spinner"></div>
-          <div class="spinner-text">Cargando roles...</div>
+          <div class="spinner-text">Iniciando servicio...</div>
         </div>
+        {% endif %}
         <div class="reporte-title"><i class="fa fa-users"></i> Usuarios por Rol</div>
         <div class="chart-wrap">
           <canvas id="chartRol"></canvas>
         </div>
-        <div class="error-msg" id="err-rol">⚠️ No se pudo cargar el servicio</div>
       </div>
 
       <!-- CIUDAD -->
-      <div class="reporte-card full">
-        <div class="spinner-overlay" id="spin-ciudad">
+      <div class="reporte-card full" style="position:relative">
+        {% if not data_ciudad %}
+        <div class="spinner-overlay">
           <div class="spinner"></div>
-          <div class="spinner-text">Cargando ciudades...</div>
+          <div class="spinner-text">Iniciando servicio...</div>
         </div>
+        {% endif %}
         <div class="reporte-title"><i class="fa fa-city"></i> Usuarios por Ciudad</div>
         <div class="chart-wrap" style="height:260px">
           <canvas id="chartCiudad"></canvas>
         </div>
-        <div class="error-msg" id="err-ciudad">⚠️ No se pudo cargar el servicio</div>
       </div>
 
     </div>
@@ -201,116 +192,84 @@
   const YELLOW = '#fbbf24';
   const BLUE   = '#38bdf8';
   const TEXT   = '#94a3b8';
-  const MS_REPORTES = 'https://ms-reportes-87pa.onrender.com';
 
   Chart.defaults.color = TEXT;
   Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
 
-  function hideSpinner(id) {
-    document.getElementById(id).classList.add('hidden');
+  // ESTADO
+  const estadoData = {{ data_estado | tojson }};
+  if (estadoData && (estadoData.activos || estadoData.inactivos)) {
+    new Chart(document.getElementById('chartEstado'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Activos', 'Inactivos'],
+        datasets: [{
+          data: [estadoData.activos || 0, estadoData.inactivos || 0],
+          backgroundColor: [GREEN, RED],
+          borderWidth: 0,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } } }
+      }
+    });
   }
-  function showError(id) {
-    document.getElementById(id).style.display = 'block';
+
+  // ROL
+  const rolData = {{ data_rol | tojson }};
+  if (rolData && rolData.length) {
+    new Chart(document.getElementById('chartRol'), {
+      type: 'doughnut',
+      data: {
+        labels: rolData.map(r => r.role || r[0]),
+        datasets: [{
+          data: rolData.map(r => r.total || r[1]),
+          backgroundColor: [ACCENT, YELLOW, BLUE],
+          borderWidth: 0,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } } }
+      }
+    });
   }
 
-  // ── ESTADO ────────────────────────────────────────────────────────────────
-  fetch(`${MS_REPORTES}/api/reportes/estado`)
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('num-activos').textContent   = data.activos   ?? 0;
-      document.getElementById('num-inactivos').textContent = data.inactivos ?? 0;
-      new Chart(document.getElementById('chartEstado'), {
-        type: 'doughnut',
-        data: {
-          labels: ['Activos', 'Inactivos'],
-          datasets: [{
-            data: [data.activos || 0, data.inactivos || 0],
-            backgroundColor: [GREEN, RED],
-            borderWidth: 0,
-            hoverOffset: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } } }
+  // CIUDAD
+  const ciudadData = {{ data_ciudad | tojson }};
+  if (ciudadData && ciudadData.length) {
+    new Chart(document.getElementById('chartCiudad'), {
+      type: 'bar',
+      data: {
+        labels: ciudadData.map(c => c.city || c[0]),
+        datasets: [{
+          label: 'Usuarios',
+          data: ciudadData.map(c => c.total || c[1]),
+          backgroundColor: ACCENT,
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          x: { grid: { display: false } }
         }
-      });
-      hideSpinner('spin-estado');
-    })
-    .catch(() => {
-      hideSpinner('spin-estado');
-      showError('err-estado');
+      }
     });
-
-  // ── ROL ───────────────────────────────────────────────────────────────────
-  fetch(`${MS_REPORTES}/api/reportes/por-rol`)
-    .then(r => r.json())
-    .then(data => {
-      const labels = data.map(r => r.role || r[0]);
-      const values = data.map(r => r.total || r[1]);
-      new Chart(document.getElementById('chartRol'), {
-        type: 'doughnut',
-        data: {
-          labels,
-          datasets: [{
-            data: values,
-            backgroundColor: [ACCENT, YELLOW, BLUE],
-            borderWidth: 0,
-            hoverOffset: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } } }
-        }
-      });
-      hideSpinner('spin-rol');
-    })
-    .catch(() => {
-      hideSpinner('spin-rol');
-      showError('err-rol');
-    });
-
-  // ── CIUDAD ────────────────────────────────────────────────────────────────
-  fetch(`${MS_REPORTES}/api/reportes/por-ciudad`)
-    .then(r => r.json())
-    .then(data => {
-      const labels = data.map(c => c.city || c[0]);
-      const values = data.map(c => c.total || c[1]);
-      new Chart(document.getElementById('chartCiudad'), {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Usuarios',
-            data: values,
-            backgroundColor: ACCENT,
-            borderRadius: 6,
-            borderSkipped: false
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1 },
-              grid: { color: 'rgba(255,255,255,0.05)' }
-            },
-            x: { grid: { display: false } }
-          }
-        }
-      });
-      hideSpinner('spin-ciudad');
-    })
-    .catch(() => {
-      hideSpinner('spin-ciudad');
-      showError('err-ciudad');
-    });
+  }
 </script>
 </body>
 </html>
