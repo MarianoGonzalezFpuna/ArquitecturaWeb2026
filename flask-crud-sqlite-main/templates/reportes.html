@@ -111,11 +111,11 @@
         <div class="reporte-title"><i class="fa fa-circle-half-stroke"></i> Estado de Usuarios</div>
         <div class="estado-grid">
           <div class="estado-item">
-            <div class="estado-num color-green">{{ data_estado.get('activo', 0) }}</div>
+            <div class="estado-num color-green">{{ data_estado.get('activos', 0) }}</div>
             <div class="estado-label">✅ Activos</div>
           </div>
           <div class="estado-item">
-            <div class="estado-num color-red">{{ data_estado.get('inactivo', 0) }}</div>
+            <div class="estado-num color-red">{{ data_estado.get('inactivos', 0) }}</div>
             <div class="estado-label">⛔ Inactivos</div>
           </div>
         </div>
@@ -162,7 +162,7 @@
     data: {
       labels: ['Activos', 'Inactivos'],
       datasets: [{
-        data: [estadoData['Activo'] || 0, estadoData['inactivos'] || 0],
+        data: [estadoData['activos'] || 0, estadoData['inactivos'] || 0],
         backgroundColor: [GREEN, RED],
         borderWidth: 0,
         hoverOffset: 6
