@@ -1,7 +1,7 @@
 # 🌐 ArquitecturaWeb2026 – Microservicios con Docker
 
 **Facultad Politécnica – Universidad Nacional de Asunción**  
-**Materia:** Arquitectura WEB – Segundo Parcial  
+**Materia:** Arquitectura WEB
 **Profesor:** Rodrigo Benítez  
 **Integrantes:** Mariano González - 5.027.858
                  Tiara Caccuri  - 7.213.555
