@@ -127,6 +127,24 @@ def toggle_status(id):
         print(f"Error en toggle: {e}")
 
     return redirect(url_for('index'))
-
+# ── REPORTES ──────────────────────────────────────────────────────────────────
+@app.route("/reportes")
+def reportes():
+    try:
+        r_ciudad = requests.get(f"{MS_REPORTES}/api/reportes/por-ciudad", timeout=10)
+        r_estado = requests.get(f"{MS_REPORTES}/api/reportes/estado", timeout=10)
+        r_rol    = requests.get(f"{MS_REPORTES}/api/reportes/por-rol", timeout=10)
+        data_ciudad = r_ciudad.json()
+        data_estado = r_estado.json()
+        data_rol    = r_rol.json()
+    except Exception as e:
+        data_ciudad = []
+        data_estado = {}
+        data_rol    = []
+    return render_template("reportes.html",
+        data_ciudad=data_ciudad,
+        data_estado=data_estado,
+        data_rol=data_rol
+    )
 if __name__ == "__main__":
     app.run(debug=True)
